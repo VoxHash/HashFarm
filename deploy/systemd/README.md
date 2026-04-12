@@ -23,3 +23,5 @@ cd monitor && python -m venv .venv && .venv/bin/pip install -r requirements.txt
 ```
 
 5. `loginctl enable-linger "$USER"` if you want user services to survive logout.
+
+6. Open **TCP 3333** (stratum) to your LAN or laptop only—see [`../FIREWALL.md`](../FIREWALL.md). Stratum uses **`0.0.0.0:3333`** by default once `monerod` is synchronized.

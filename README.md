@@ -18,6 +18,14 @@ Monero **P2Pool** mining stack for a PC (pruned `monerod` + P2Pool + optional lo
 
 Set `P2POOL_NO_AUTODIFF=1` in `.env`, run P2Pool via `scripts/garuda/p2pool-v4.sh run` (script passes `--no-autodiff` when set). Set `FIXED_DIFF` and regenerate XMRig configs so the pool user is `WALLET+FIXED_DIFF`.
 
+## LAN stratum (`0.0.0.0:3333`) and firewall
+
+P2Pool is started with **`--stratum 0.0.0.0:3333`** by default (override with **`P2POOL_STRATUM_BIND`** in `.env`). That listens on every interface so laptops can use `stratum+tcp://<GAMING_PC_LAN_IP>:3333`.
+
+Open **TCP 3333** only from your LAN (e.g. **`192.168.68.0/24`**) or from the laptop’s single IP—see [`deploy/FIREWALL.md`](deploy/FIREWALL.md) for **nftables**, **ufw**, and **firewalld** examples. Applying firewall rules requires **`sudo`** on the gaming PC.
+
+After `monerod` is synchronized, confirm stratum: `ss -tlnp | grep 3333` (expect `0.0.0.0:3333` or `*:3333`). Until then P2Pool may log “not synchronized” and not bind stratum yet.
+
 ## P2Pool “connection refused” on :3333
 
 If `monerod` is still syncing, P2Pool often **does not bind** the stratum HTTP port yet (`ss` shows nothing on `3333` even when `pgrep p2pool` is running). That is normal. Wait until chain height is near the network target and `logs/p2pool.log` shows a healthy connection; then `curl http://127.0.0.1:3333/local/stratum` should return JSON.

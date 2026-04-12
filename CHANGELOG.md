@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Firewall docs** for `192.168.68.0/24`, single-laptop allow, and **firewalld**; **env.template** comments for `P2POOL_STRATUM_BIND`. README notes default stratum `0.0.0.0:3333` and `ss` check after sync.
 - Clearer XMRig **401 UNAUTHORIZED** hints when `XMRIG_API_TOKEN` is missing or mismatched; monitor README troubleshooting for HTTP API auth.
 
 ### Added
