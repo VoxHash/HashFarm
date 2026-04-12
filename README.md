@@ -32,7 +32,7 @@ If `monerod` is still syncing, P2Pool often **does not bind** the stratum HTTP p
 
 ## Monero RPC timeouts
 
-If the monitor reports **monerod RPC timed out**, confirm `monerod` is running and listening (`ss -tlnp | grep 18081`). The default read timeout is **`MONERO_RPC_TIMEOUT_SEC`** in `.env` (see `scripts/common/env.template`). If timeouts persist on a healthy disk, review official **monerod** tuning (concurrency, cache) and keep the chain on a responsive volume.
+If the monitor reports **monerod RPC timed out**, confirm `monerod` is running and listening (`ss -tlnp | grep 18081`). The read timeout is **`MONERO_RPC_TIMEOUT_SEC`** in `.env` (up to 600 seconds; see `scripts/common/env.template`). During catch-up on a slow disk, `get_info` can return an empty body for a long time; the dashboard can still show **height / target / lag** parsed from **`bitmonero.log`** when **`MONERO_DATA_DIR`** is set. If timeouts persist on a healthy disk, review official **monerod** tuning (for example optional **`MONERO_BLOCK_SYNC_SIZE`** in `monerod-pruned.sh`) and keep the chain on a responsive volume.
 
 ## Prebuilt XMRig (`XMRIG_BINARY`)
 
@@ -42,7 +42,7 @@ Still run **`config`** (or `run`, which regenerates the config) so the JSON matc
 
 ## CUDA / GPU mining
 
-HashFarm shell configs are **CPU-only** (`cuda: false`, `opencl: false`). NVIDIA **CUDA** mining uses a separate **xmrig-cuda** plugin whose **major.minor version must match** the XMRig release you run; mixing unrelated trees (for example XMRig 6.26 with CUDA plugin 6.22 sources) is unsupported upstream. For GPU RandomX you would build or download a **paired** XMRig + CUDA release from the official project, enable `cuda` in config, and keep the same **HTTP API** settings if you want that rig in the dashboard.
+HashFarm defaults to **CPU-only** JSON (`cuda: false`). For NVIDIA RandomX, use **XMRig 6.26.x** with a **`libxmrig-cuda.so`** built from **`xmrig-cuda` `v6.22.1`** (plugin **API v4**), install the `.so` next to your `xmrig`, then set **`XMRIG_ENABLE_CUDA=1`** and run **`scripts/garuda/xmrig-cpu.sh config`**. Build helper: [`scripts/garuda/build-xmrig-cuda.sh`](scripts/garuda/build-xmrig-cuda.sh) (set **`XMRIG_CUDA_ARCH`** to your GPU’s numeric SM, e.g. **86** for RTX 3070 Ti, so CUDA 12+ does not try deprecated **`sm_50`** defaults; on **CUDA 13+** it also applies a small **`cuda_extra.cu`** patch for removed **`cudaDeviceProp`** clock fields). Full notes, GPU table, and upstream PR workflow: [`docs/cuda-mining.md`](docs/cuda-mining.md).
 
 ## `monerod` from Monero GUI vs packages
 

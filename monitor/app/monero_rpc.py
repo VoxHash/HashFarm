@@ -76,7 +76,9 @@ async def _rpc(
 
 
 async def fetch_daemon_snapshot(client: httpx.AsyncClient) -> dict[str, Any]:
-    info = await _rpc(client, "get_info", transient_retries=3)
+    # Each retry waits the full read timeout; keep retries low when the timeout is large (slow disk).
+    gi_retries = 3 if float(settings.MONERO_RPC_TIMEOUT_SEC) <= 90.0 else 1
+    info = await _rpc(client, "get_info", transient_retries=gi_retries)
     height = int(info.get("height") or 0)
     target = int(info.get("target_height") or 0)
     diff = float(info.get("difficulty") or 0)

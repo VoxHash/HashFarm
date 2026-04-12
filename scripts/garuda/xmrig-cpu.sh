@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Configure or build XMRig (CPU) on Garuda for RandomX -> local P2Pool stratum.
+# Configure or build XMRig on Garuda for RandomX -> local P2Pool stratum.
+# Optional NVIDIA: set XMRIG_ENABLE_CUDA=1 after installing libxmrig-cuda.so (see scripts/garuda/build-xmrig-cuda.sh).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -39,6 +40,10 @@ build_xmrig() {
 write_config() {
   mkdir -p "$(dirname "${CONFIG_OUT}")"
   umask 077
+  local cuda_line='  "cuda": false,'
+  if [[ "${XMRIG_ENABLE_CUDA:-0}" == "1" ]]; then
+    cuda_line='  "cuda": { "enabled": true, "nvml": true },'
+  fi
   cat > "${CONFIG_OUT}" <<JSON
 {
   "autosave": true,
@@ -62,7 +67,7 @@ write_config() {
     "numa": true
   },
   "opencl": false,
-  "cuda": false,
+${cuda_line}
   "pools": [
     {
       "algo": "rx/0",

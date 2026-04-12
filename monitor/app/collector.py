@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 
 import httpx
 
-from . import earnings, monero_rpc, p2pool_client, settings, state, xmrig_client
+from . import earnings, monero_log, monero_rpc, p2pool_client, settings, state, xmrig_client
 
 
 def _annotate_p2pool_stratum_vs_sync(monero: dict[str, Any], p2: dict[str, Any]) -> None:
@@ -50,6 +50,23 @@ def _annotate_p2pool_stratum_vs_sync(monero: dict[str, Any], p2: dict[str, Any])
     p2["error"] = " ".join(parts)
 
 
+def _maybe_apply_bitmonero_log_heights(monero: dict[str, Any]) -> None:
+    if not monero.get("_error"):
+        return
+    h0 = int(monero.get("height") or 0)
+    t0 = int(monero.get("target_height") or 0)
+    if h0 > 0 and t0 > 0:
+        return
+    if not settings.MONERO_DATA_DIR:
+        return
+    hint = monero_log.sync_heights_from_bitmonero_log(settings.MONERO_DATA_DIR)
+    if not hint:
+        return
+    monero.update(hint)
+    monero["monero_height_from_log"] = True
+    monero["status"] = "Synchronizing — heights from bitmonero.log (JSON-RPC empty or timed out)"
+
+
 async def _xmr_spot_usd(client: httpx.AsyncClient) -> float | None:
     try:
         r = await client.get(
@@ -77,6 +94,7 @@ async def build_snapshot(client: httpx.AsyncClient) -> dict[str, Any]:
         state.record_last_good_monero(monero)
     except Exception as e:
         monero = state.merge_stale_monero(state.monero_collector_failure(str(e)))
+        _maybe_apply_bitmonero_log_heights(monero)
     snap["monero"] = monero
 
     p2 = await p2pool_client.fetch_p2pool(client)

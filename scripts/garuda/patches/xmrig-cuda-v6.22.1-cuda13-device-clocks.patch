@@ -1,0 +1,20 @@
+--- a/src/cuda_extra.cu
++++ b/src/cuda_extra.cu
+@@ -552,6 +552,15 @@
+     ctx->device_arch[1]         = props.minor;
+-    ctx->device_clockRate       = props.clockRate;
+-    ctx->device_memoryClockRate = props.memoryClockRate;
++#if CUDART_VERSION >= 13000
++    int hf_clock_khz = 0;
++    int hf_mem_clock_khz = 0;
++    cudaDeviceGetAttribute(&hf_clock_khz, cudaDevAttrClockRate, ctx->device_id);
++    cudaDeviceGetAttribute(&hf_mem_clock_khz, cudaDevAttrMemoryClockRate, ctx->device_id);
++    ctx->device_clockRate       = hf_clock_khz;
++    ctx->device_memoryClockRate = hf_mem_clock_khz;
++#else
++    ctx->device_clockRate       = props.clockRate;
++    ctx->device_memoryClockRate = props.memoryClockRate;
++#endif
+     ctx->device_pciBusID        = props.pciBusID;
+     ctx->device_pciDeviceID     = props.pciDeviceID;
+     ctx->device_pciDomainID     = props.pciDomainID;

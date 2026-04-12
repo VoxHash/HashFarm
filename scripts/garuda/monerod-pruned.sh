@@ -34,9 +34,13 @@ if [[ -z "${MONEROD_RESOLVED}" ]]; then
   exit 1
 fi
 
+MONEROD_EXTRA=(--data-dir "${MONERO_DATA_DIR}" --prune-blockchain)
+if [[ -n "${MONERO_BLOCK_SYNC_SIZE:-}" ]]; then
+  MONEROD_EXTRA+=(--block-sync-size "${MONERO_BLOCK_SYNC_SIZE}")
+fi
+
 exec "${MONEROD_RESOLVED}" \
-  --data-dir "${MONERO_DATA_DIR}" \
-  --prune-blockchain \
+  "${MONEROD_EXTRA[@]}" \
   --rpc-bind-ip "${RPC_BIND}" \
   --rpc-bind-port "${RPC_PORT}" \
   --zmq-pub "${ZMQ_PUB}" \

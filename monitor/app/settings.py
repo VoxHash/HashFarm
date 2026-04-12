@@ -6,12 +6,14 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-load_dotenv(REPO_ROOT / ".env", override=False)
-# If uvicorn is started with cwd=monitor/, repo .env may still be one level up (override=False keeps existing vars).
+_repo_env = REPO_ROOT / ".env"
+if _repo_env.is_file():
+    # Repo .env must win over stray exported vars (e.g. old MONERO_DATA_DIR in a shell profile).
+    load_dotenv(_repo_env, override=True)
 _cwd = Path.cwd()
 for _extra in (_cwd / ".env", _cwd.parent / ".env"):
-    if _extra.is_file():
-        load_dotenv(_extra, override=False)
+    if _extra.is_file() and _extra.resolve() != _repo_env.resolve():
+        load_dotenv(_extra, override=True)
 
 
 def _f(name: str, default: float | None = None) -> float | None:
@@ -29,8 +31,9 @@ def _i(name: str, default: int) -> int:
 
 
 MONERO_RPC_URL = os.getenv("MONERO_RPC_URL", "http://127.0.0.1:18081/json_rpc")
-MONERO_RPC_TIMEOUT_SEC = max(5.0, min(300.0, float(os.getenv("MONERO_RPC_TIMEOUT_SEC", "60"))))
+MONERO_RPC_TIMEOUT_SEC = max(5.0, min(600.0, float(os.getenv("MONERO_RPC_TIMEOUT_SEC", "60"))))
 MONERO_RPC_STALE_TTL_SEC = max(30.0, min(3600.0, float(os.getenv("MONERO_RPC_STALE_TTL_SEC", "300"))))
+MONERO_DATA_DIR = (os.getenv("MONERO_DATA_DIR") or "").strip()
 P2POOL_STRATUM_URL = os.getenv("P2POOL_STRATUM_URL", "http://127.0.0.1:3333").rstrip("/")
 WALLET_MAIN = os.getenv("WALLET_MAIN", "")
 

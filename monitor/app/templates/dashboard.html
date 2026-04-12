@@ -51,7 +51,12 @@
         <td class="{% if r.get('error') %}err{% else %}meta{% endif %}">{{ r.get('error') or '—' }}</td>
       </tr>
       {% endfor %}
-      <tr><th colspan="3">Combined</th><th>{{ "%.0f"|format(snap.get('aggregate_hashrate_hs') or 0) }}</th><th>{{ snap.get('total_watts') or 0 }}</th><td></td></tr>
+      <tr>
+        <th colspan="2">Combined</th>
+        <td>{{ "%.0f"|format(snap.get('aggregate_hashrate_hs') or 0) }}</td>
+        <td>{{ "%.0f"|format(snap.get('total_watts') or 0) }}</td>
+        <td></td>
+      </tr>
     </tbody>
   </table>
 
@@ -77,6 +82,12 @@
   {% if m.get('monero_rpc_stale') %}
   <p class="warn">{{ m.get('monero_rpc_stale_hint') or 'Values below may be from the last successful poll.' }}</p>
   {% endif %}
+  {% if m.get('monero_height_from_log') %}
+  <p class="warn">
+    Height / target / lag are parsed from <code>bitmonero.log</code> under <code>MONERO_DATA_DIR</code> because
+    <code>get_info</code> returned no data (typical when the daemon is writing the chain on a busy HDD). Difficulty and peer counts stay unknown until RPC responds.
+  </p>
+  {% endif %}
   <table>
     <tbody>
       <tr><th>Height</th><td>{{ m.get('height') }}</td></tr>
@@ -85,7 +96,7 @@
       <tr><th>Difficulty</th><td>{{ m.get('difficulty') }}</td></tr>
       <tr><th>Status</th><td>
         {{ m.get('status') or "—" }}
-        {% if not m.get('_error') %}
+        {% if not m.get('_error') and not m.get('monero_height_from_log') %}
         <span class="meta">(from <code>get_info</code>; not the same as “fully synced”)</span>
         {% endif %}
       </td></tr>
