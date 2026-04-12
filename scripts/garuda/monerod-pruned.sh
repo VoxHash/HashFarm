@@ -15,7 +15,26 @@ IN_PEERS="${MONERO_IN_PEERS:-64}"
 
 mkdir -p "${MONERO_DATA_DIR}"
 
-exec monerod \
+MONEROD_BIN="${MONEROD_BIN:-monerod}"
+MONEROD_RESOLVED=""
+if command -v "${MONEROD_BIN}" >/dev/null 2>&1; then
+  MONEROD_RESOLVED="$(command -v "${MONEROD_BIN}")"
+elif [[ -x "${MONEROD_BIN}" ]]; then
+  MONEROD_RESOLVED="${MONEROD_BIN}"
+else
+  for c in "${HOME}/.local/opt/monero-cli"*/monerod /usr/bin/monerod /usr/local/bin/monerod; do
+    if [[ -x "${c}" ]]; then
+      MONEROD_RESOLVED="${c}"
+      break
+    fi
+  done
+fi
+if [[ -z "${MONEROD_RESOLVED}" ]]; then
+  echo "monerod not found (install monerod or set MONEROD_BIN in .env to the full path)." >&2
+  exit 1
+fi
+
+exec "${MONEROD_RESOLVED}" \
   --data-dir "${MONERO_DATA_DIR}" \
   --prune-blockchain \
   --rpc-bind-ip "${RPC_BIND}" \
