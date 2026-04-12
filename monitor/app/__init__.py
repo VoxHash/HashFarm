@@ -1,0 +1,1 @@
+# HashFarm mining monitor
