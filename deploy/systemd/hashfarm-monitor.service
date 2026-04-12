@@ -1,0 +1,14 @@
+[Unit]
+Description=HashFarm P2Pool mining monitor (FastAPI)
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/Projects/HashFarm
+EnvironmentFile=%h/Projects/HashFarm/.env
+ExecStart=%h/Projects/HashFarm/scripts/garuda/run-monitor.sh
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target

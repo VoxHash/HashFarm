@@ -1,0 +1,16 @@
+[Unit]
+Description=XMRig CPU miner to local P2Pool
+After=hashfarm-p2pool.service network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/Projects/HashFarm
+EnvironmentFile=%h/Projects/HashFarm/.env
+Environment=XMRIG_RIG_ID=gaming_pc
+Environment=XMRIG_API_PORT=18060
+ExecStart=%h/Projects/HashFarm/scripts/garuda/xmrig-cpu.sh run
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=default.target

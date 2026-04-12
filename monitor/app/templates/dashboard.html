@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HashFarm P2Pool Monitor</title>
+  <style>
+    :root { color-scheme: dark light; }
+    body { font-family: system-ui, sans-serif; margin: 1.5rem; line-height: 1.45; max-width: 960px; }
+    h1 { font-size: 1.25rem; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+    th, td { border: 1px solid #8884; padding: 0.4rem 0.6rem; text-align: left; }
+    th { font-weight: 600; }
+    pre { background: #1112; padding: 0.75rem; overflow: auto; font-size: 0.8rem; }
+    .ok { color: #0a0; }
+    .warn { color: #a60; }
+    .err { color: #c00; }
+    .meta { color: #666; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <h1>HashFarm — Monero P2Pool + XMRig</h1>
+  <p class="meta">Updated: {{ snap.get('updated_at') or "—" }} · Auto-refresh every 15s</p>
+  {% if snap.get('last_error') %}
+  <p class="err">Last collector error: {{ snap.get('last_error') }}</p>
+  {% endif %}
+
+  <h2>Configured endpoints</h2>
+  {% set ep = snap.get('endpoints') or {} %}
+  <table>
+    <tbody>
+      <tr><th>monerod JSON-RPC</th><td><code>{{ ep.get('monero_rpc', settings.MONERO_RPC_URL) }}</code></td></tr>
+      <tr><th>P2Pool HTTP (local API)</th><td><code>{{ ep.get('p2pool_http', settings.P2POOL_STRATUM_URL) }}</code></td></tr>
+      {% set p = snap.get('p2pool') or {} %}
+      {% if p.get('http_base') %}
+      <tr><th>P2Pool (last OK)</th><td><code>{{ p.get('http_base') }}</code></td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+
+  <h2>Hashrate</h2>
+  <table>
+    <thead><tr><th>Rig</th><th>API</th><th>Hashrate (10s) H/s</th><th>Watts</th><th>Miner / API status</th></tr></thead>
+    <tbody>
+      {% for r in snap.get('rigs', []) %}
+      <tr>
+        <td>{{ r.get('label', '') }}</td>
+        <td>{{ r.get('url', '') }}</td>
+        <td>{{ "%.0f"|format(r.get('hashrate_hs') or 0) }}</td>
+        <td>{{ r.get('watts_assumed') or 0 }}</td>
+        <td class="{% if r.get('error') %}err{% else %}meta{% endif %}">{{ r.get('error') or '—' }}</td>
+      </tr>
+      {% endfor %}
+      <tr><th colspan="3">Combined</th><th>{{ "%.0f"|format(snap.get('aggregate_hashrate_hs') or 0) }}</th><th>{{ snap.get('total_watts') or 0 }}</th><td></td></tr>
+    </tbody>
+  </table>
+
+  <h2>Profitability (reference)</h2>
+  <p class="meta">
+    <strong>Main-chain solo expectation</strong> from your aggregate hashrate and live difficulty (not P2Pool payout timing).
+    Spot XMR/USD from CoinGecko public API when reachable.
+  </p>
+  <table>
+    <tbody>
+      <tr><th>Est. mainchain solo XMR / day</th><td>{{ "%.6f"|format(snap.get('estimated_mainchain_solo_xmr_per_day') or 0) }}</td></tr>
+      <tr><th>XMR / USD (spot)</th><td>{% if snap.get('xmr_usd') is not none %}{{ "%.4f"|format(snap.get('xmr_usd')) }}{% else %}unavailable{% endif %}</td></tr>
+      <tr><th>Electricity USD / day (sum rig watts)</th><td>{{ "%.4f"|format(snap.get('daily_power_usd') or 0) }} @ ${{ "%.4f"|format(settings.ELECTRICITY_USD_PER_KWH) }}/kWh</td></tr>
+      <tr><th>Net USD / day (spot − power)</th><td>
+        {% if snap.get('net_usd_per_day') is not none %}{{ "%.4f"|format(snap.get('net_usd_per_day')) }}{% else %}n/a{% endif %}
+      </td></tr>
+    </tbody>
+  </table>
+
+  <h2>Monero daemon</h2>
+  {% set m = snap.get('monero') or {} %}
+  {% if m.get('_error') %}<p class="err">{{ m.get('_error') }}</p>{% endif %}
+  {% if m.get('monero_rpc_stale') %}
+  <p class="warn">{{ m.get('monero_rpc_stale_hint') or 'Values below may be from the last successful poll.' }}</p>
+  {% endif %}
+  <table>
+    <tbody>
+      <tr><th>Height</th><td>{{ m.get('height') }}</td></tr>
+      <tr><th>Target height</th><td>{{ m.get('target_height') }}</td></tr>
+      <tr><th>Sync lag blocks</th><td class="{{ 'ok' if (m.get('sync_lag_blocks') or 0) <= settings.MONERO_MAX_SYNC_LAG_BLOCKS else 'warn' }}">{{ m.get('sync_lag_blocks') }}</td></tr>
+      <tr><th>Difficulty</th><td>{{ m.get('difficulty') }}</td></tr>
+      <tr><th>Status</th><td>
+        {{ m.get('status') or "—" }}
+        {% if not m.get('_error') %}
+        <span class="meta">(from <code>get_info</code>; not the same as “fully synced”)</span>
+        {% endif %}
+      </td></tr>
+      <tr><th>Daemon reports synchronized</th><td>{{ m.get('synchronized_flag') }}</td></tr>
+      <tr><th>Peers in / out</th><td>{{ m.get('incoming_connections') }} / {{ m.get('outgoing_connections') }}</td></tr>
+    </tbody>
+  </table>
+
+  <h2>P2Pool <code>/local/stratum</code></h2>
+  {% set p = snap.get('p2pool') or {} %}
+  {% if p.get('stratum_pending_sync') %}
+  <p class="warn">
+    Stratum HTTP is not expected to answer yet: finish <code>monerod</code> sync first (see sync lag above). Check <code>logs/p2pool.log</code> for lines like “not synchronized”.
+  </p>
+  {% endif %}
+  {% if p.get('error') %}<p class="err">{{ p.get('error') }}</p>{% endif %}
+  <pre>{{ p.get('stratum') | tojson(indent=2) if p.get('stratum') is not none else "{}" }}</pre>
+
+  <h2>P2Pool <code>/local/p2p</code></h2>
+  <pre>{{ p.get('p2p') | tojson(indent=2) if p.get('p2p') is not none else "{}" }}</pre>
+
+  {% if snap.get('wallet_main') %}
+  <p class="meta">Wallet lookups (public explorer): <a href="https://xmrchain.net/search?value={{ snap.get('wallet_main') | e }}">xmrchain.net</a></p>
+  {% endif %}
+  <p class="meta">
+    Browser console messages such as <code>SES Removing unpermitted intrinsics</code> or
+    <code>runtime.lastError</code> usually come from extensions (wallets, script blockers), not this page.
+  </p>
+  <p class="meta">JSON: <a href="/api/snapshot">/api/snapshot</a></p>
+  <script>
+    setTimeout(() => location.reload(), 15000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+[Unit]
+Description=Monero pruned daemon (ZMQ for P2Pool)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Edit paths to match your clone of HashFarm.
+WorkingDirectory=%h/Projects/HashFarm
+EnvironmentFile=%h/Projects/HashFarm/.env
+ExecStart=%h/Projects/HashFarm/scripts/garuda/monerod-pruned.sh
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=default.target
