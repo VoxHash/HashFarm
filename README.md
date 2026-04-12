@@ -61,4 +61,4 @@ Use a **Linux-native** filesystem (**ext4** or **xfs**) for `monerod` if you can
 - [Code of Conduct](CODE_OF_CONDUCT.md) · [Security](SECURITY.md) · [Support](SUPPORT.md)
 - [GitHub Discussions](https://github.com/VoxHash-Labs/HashFarm/discussions) (when enabled)
 
-Suggested repository topics: see [GITHUB_TOPICS.md](GITHUB_TOPICS.md).
+Discovery topics are configured on the GitHub **About** section (`monero`, `xmr`, `p2pool`, `xmrig`, `randomx`, `mining`, `stratum`, `python`, `fastapi`, `bash`, `linux`, `macos`, `self-hosted`, `open-source`, `cryptocurrency`, `httpx`, `uvicorn`, `home-server`, `systemd`, `observability`).
