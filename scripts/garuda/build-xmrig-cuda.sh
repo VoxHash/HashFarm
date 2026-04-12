@@ -50,9 +50,12 @@ if [[ ! -d "${SRC}/.git" ]] && [[ ! -f "${SRC}/CMakeLists.txt" ]]; then
   exit 1
 fi
 
-if [[ -d "${SRC}/.git" ]]; then
+# Tarball trees often have no .git; only fetch/checkout when this is a real clone.
+if git -C "${SRC}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   git -C "${SRC}" fetch --tags origin 2>/dev/null || true
-  git -C "${SRC}" checkout -f "${TAG}"
+  if ! git -C "${SRC}" checkout -f "${TAG}" 2>/dev/null; then
+    echo "Note: could not checkout ${TAG}; building sources as they are on disk." >&2
+  fi
 fi
 
 # CUDA 13+ removed cudaDeviceProp::clockRate / memoryClockRate (nvcc error on v6.22.1 sources).

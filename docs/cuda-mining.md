@@ -25,7 +25,7 @@ Recorded on the operator workstation:
 2. From the HashFarm repo (with `.env` containing **`XMRIG_BINARY`** if you use a Desktop `xmrig`):
 
    ```bash
-   export XMRIG_CUDA_SRC=/path/to/xmrig-cuda-6.22.1
+   export XMRIG_CUDA_SRC=/path/to/xmrig-cuda-6.22.1   # git clone or release tarball; tag checkout runs only for a real clone
    export XMRIG_CUDA_ARCH=86   # required: xmrig-cuda CMake uses -DCUDA_ARCH (not defaults: they include 50, dropped in CUDA 12+)
    ./scripts/garuda/build-xmrig-cuda.sh
    ```
