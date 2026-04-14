@@ -38,9 +38,15 @@
     </tbody>
   </table>
 
-  <h2>Hashrate</h2>
+  <h2>Hashrate + Safety</h2>
+  {% set safety = snap.get('safety') or {} %}
+  <p class="meta">
+    Safety automation: {{ 'enabled' if safety.get('enabled') else 'disabled' }}
+    {% if safety.get('dry_run') %}(dry-run){% endif %}
+    · Reduced rigs: {{ safety.get('reduced_rigs') or 0 }}
+  </p>
   <table>
-    <thead><tr><th>Rig</th><th>API</th><th>Hashrate (10s) H/s</th><th>Watts</th><th>Miner / API status</th></tr></thead>
+    <thead><tr><th>Rig</th><th>API</th><th>Hashrate (10s) H/s</th><th>Watts</th><th>Telemetry (CPU/GPU/Power)</th><th>Safety mode</th><th>Miner / API status</th></tr></thead>
     <tbody>
       {% for r in snap.get('rigs', []) %}
       <tr>
@@ -48,13 +54,27 @@
         <td>{{ r.get('url', '') }}</td>
         <td>{{ "%.0f"|format(r.get('hashrate_hs') or 0) }}</td>
         <td>{{ r.get('watts_assumed') or 0 }}</td>
-        <td class="{% if r.get('error') %}err{% else %}meta{% endif %}">{{ r.get('error') or '—' }}</td>
+        <td class="{% if r.get('telemetry_error') %}warn{% else %}meta{% endif %}">
+          CPU {{ "%.1f"|format(r.get('cpu_temp_c')) if r.get('cpu_temp_c') is not none else 'n/a' }} C /
+          GPU {{ "%.1f"|format(r.get('gpu_temp_c')) if r.get('gpu_temp_c') is not none else 'n/a' }} C /
+          Power {{ "%.1f"|format(r.get('power_w')) if r.get('power_w') is not none else 'n/a' }} W
+          {% if r.get('telemetry_error') %}<br>{{ r.get('telemetry_error') }}{% endif %}
+        </td>
+        <td class="{% if r.get('safety_mode') == 'reduced' %}warn{% else %}meta{% endif %}">
+          {{ r.get('safety_mode') or 'normal' }}
+          {% if r.get('safety_last_action') %}<br>{{ r.get('safety_last_action') }}{% endif %}
+          {% if r.get('safety_last_reason') %}<br>{{ r.get('safety_last_reason') }}{% endif %}
+          {% if r.get('safety_error') %}<br>{{ r.get('safety_error') }}{% endif %}
+        </td>
+        <td class="{% if r.get('error') %}err{% else %}meta{% endif %}">{{ r.get('error') or 'ok' }}</td>
       </tr>
       {% endfor %}
       <tr>
         <th colspan="2">Combined</th>
         <td>{{ "%.0f"|format(snap.get('aggregate_hashrate_hs') or 0) }}</td>
         <td>{{ "%.0f"|format(snap.get('total_watts') or 0) }}</td>
+        <td></td>
+        <td class="meta">Reduced rigs: {{ (snap.get('safety') or {}).get('reduced_rigs') or 0 }}</td>
         <td></td>
       </tr>
     </tbody>
@@ -63,12 +83,14 @@
   <h2>Profitability (reference)</h2>
   <p class="meta">
     <strong>Main-chain solo expectation</strong> from your aggregate hashrate and live difficulty (not P2Pool payout timing).
-    Spot XMR/USD from CoinGecko public API when reachable.
+    Spot XMR/USD uses fallback sources with cache.
   </p>
   <table>
     <tbody>
       <tr><th>Est. mainchain solo XMR / day</th><td>{{ "%.6f"|format(snap.get('estimated_mainchain_solo_xmr_per_day') or 0) }}</td></tr>
       <tr><th>XMR / USD (spot)</th><td>{% if snap.get('xmr_usd') is not none %}{{ "%.4f"|format(snap.get('xmr_usd')) }}{% else %}unavailable{% endif %}</td></tr>
+      <tr><th>Price source</th><td>{{ snap.get('xmr_usd_source') or 'n/a' }} {% if snap.get('xmr_usd_cached') %}(cached{% if snap.get('xmr_usd_age_sec') is not none %}, age {{ "%.0f"|format(snap.get('xmr_usd_age_sec')) }}s{% endif %}){% endif %}</td></tr>
+      <tr><th>Price feed status</th><td>{{ snap.get('xmr_usd_error') or 'ok' }}</td></tr>
       <tr><th>Electricity USD / day (sum rig watts)</th><td>{{ "%.4f"|format(snap.get('daily_power_usd') or 0) }} @ ${{ "%.4f"|format(settings.ELECTRICITY_USD_PER_KWH) }}/kWh</td></tr>
       <tr><th>Net USD / day (spot − power)</th><td>
         {% if snap.get('net_usd_per_day') is not none %}{{ "%.4f"|format(snap.get('net_usd_per_day')) }}{% else %}n/a{% endif %}

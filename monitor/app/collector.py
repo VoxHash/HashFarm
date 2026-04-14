@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 
 import httpx
 
-from . import earnings, monero_log, monero_rpc, p2pool_client, settings, state, xmrig_client
+from . import earnings, monero_log, monero_rpc, p2pool_client, price_feed, settings, state, xmrig_client
 
 
 def _annotate_p2pool_stratum_vs_sync(monero: dict[str, Any], p2: dict[str, Any]) -> None:
@@ -67,21 +67,6 @@ def _maybe_apply_bitmonero_log_heights(monero: dict[str, Any]) -> None:
     monero["status"] = "Synchronizing — heights from bitmonero.log (JSON-RPC empty or timed out)"
 
 
-async def _xmr_spot_usd(client: httpx.AsyncClient) -> float | None:
-    try:
-        r = await client.get(
-            "https://api.coingecko.com/api/v3/simple/price",
-            params={"ids": "monero", "vs_currencies": "usd"},
-            timeout=10.0,
-        )
-        r.raise_for_status()
-        data = r.json()
-        v = data.get("monero", {}).get("usd")
-        return float(v) if v is not None else None
-    except Exception:
-        return None
-
-
 async def build_snapshot(client: httpx.AsyncClient) -> dict[str, Any]:
     snap: dict[str, Any] = {"updated_at": datetime.now(UTC).isoformat()}
     snap["endpoints"] = {
@@ -115,7 +100,12 @@ async def build_snapshot(client: httpx.AsyncClient) -> dict[str, Any]:
     tw = sum(float(r.get("watts_assumed") or 0.0) for r in rigs)
     snap["total_watts"] = tw
     snap["daily_power_usd"] = earnings.daily_power_cost_usd(tw, settings.ELECTRICITY_USD_PER_KWH)
-    snap["xmr_usd"] = await _xmr_spot_usd(client)
+    price = await price_feed.get_xmr_usd(client)
+    snap["xmr_usd"] = price.get("price")
+    snap["xmr_usd_source"] = price.get("source")
+    snap["xmr_usd_cached"] = bool(price.get("cached"))
+    snap["xmr_usd_age_sec"] = price.get("age_sec")
+    snap["xmr_usd_error"] = price.get("error")
     snap["net_usd_per_day"] = earnings.net_usd_per_day(
         snap["estimated_mainchain_solo_xmr_per_day"],
         snap["xmr_usd"],

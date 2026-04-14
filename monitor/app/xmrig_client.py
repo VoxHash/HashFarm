@@ -4,7 +4,7 @@ from typing import Any
 
 import httpx
 
-from . import settings
+from . import settings, telemetry_client
 
 
 def _pick_hashrate_hs(summary: dict[str, Any]) -> float:
@@ -29,7 +29,7 @@ async def fetch_summary(client: httpx.AsyncClient, base_url: str) -> dict[str, A
     last_err: str | None = None
     for path in ("/2/summary", "/1/summary"):
         try:
-            r = await client.get(f"{base}{path}", headers=headers, timeout=5.0)
+            r = await client.get(f"{base}{path}", headers=headers, timeout=float(settings.XMRIG_API_TIMEOUT_SEC))
             if r.status_code == 401:
                 # XMRig returns 401 when access-token is set but Authorization is missing or invalid shape.
                 if not token:
@@ -62,5 +62,12 @@ async def fetch_all_rigs(client: httpx.AsyncClient) -> list[dict[str, Any]]:
         row["url"] = url
         watts = settings.WATTS[i] if i < len(settings.WATTS) else 0.0
         row["watts_assumed"] = watts
+        telemetry = await telemetry_client.fetch_for_rig(client, i)
+        row["telemetry"] = telemetry
+        row["cpu_temp_c"] = telemetry.get("cpu_temp_c")
+        row["gpu_temp_c"] = telemetry.get("gpu_temp_c")
+        row["power_w"] = telemetry.get("power_w")
+        row["telemetry_stale"] = bool(telemetry.get("stale"))
+        row["telemetry_error"] = telemetry.get("error")
         out.append(row)
     return out

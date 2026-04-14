@@ -12,7 +12,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from fastapi.templating import Jinja2Templates
 
-from . import alerts, collector, metrics, settings, state
+from . import alerts, collector, metrics, safety_controller, settings, state
 
 _templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 
@@ -56,6 +56,7 @@ async def lifespan(app: FastAPI):
             while not stop.is_set():
                 try:
                     snap = await collector.build_snapshot(client)
+                    await safety_controller.apply_policy(client, snap)
                     state.apply_snapshot(snap)
                     await _record_metrics_row(snap)
                     await alerts.evaluate(snap)

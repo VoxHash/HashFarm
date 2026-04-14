@@ -22,11 +22,18 @@ def _stratum_bases() -> list[str]:
     return bases
 
 
-async def _get_json(client: httpx.AsyncClient, base: str, path: str) -> dict[str, Any]:
+async def _get_local_api(client: httpx.AsyncClient, base: str, path: str) -> dict[str, Any]:
     url = f"{base}{path}"
     r = await client.get(url, timeout=8.0)
     r.raise_for_status()
-    return r.json()
+    try:
+        return r.json()
+    except Exception:
+        text = (r.text or "").strip()
+        # Newer p2pool may return plain text for /local/stratum while still healthy.
+        if text:
+            return {"status": text}
+        raise
 
 
 async def fetch_p2pool(client: httpx.AsyncClient) -> dict[str, Any]:
@@ -35,7 +42,7 @@ async def fetch_p2pool(client: httpx.AsyncClient) -> dict[str, Any]:
     base_ok: str | None = None
     for base in _stratum_bases():
         try:
-            out["stratum"] = await _get_json(client, base, "/local/stratum")
+            out["stratum"] = await _get_local_api(client, base, "/local/stratum")
             base_ok = base
             break
         except Exception as e:
@@ -49,7 +56,7 @@ async def fetch_p2pool(client: httpx.AsyncClient) -> dict[str, Any]:
     if base_ok:
         out["http_base"] = base_ok
         try:
-            out["p2p"] = await _get_json(client, base_ok, "/local/p2p")
+            out["p2p"] = await _get_local_api(client, base_ok, "/local/p2p")
         except Exception:
             out["p2p"] = None
     return out

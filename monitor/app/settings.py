@@ -30,6 +30,21 @@ def _i(name: str, default: int) -> int:
     return int(v)
 
 
+def _csv(name: str, default: str = "") -> list[str]:
+    raw = os.getenv(name, default)
+    return [x.strip() for x in raw.split(",") if x.strip()]
+
+
+def _csv_float(name: str, default: str = "") -> list[float]:
+    out: list[float] = []
+    for x in _csv(name, default):
+        try:
+            out.append(float(x))
+        except ValueError:
+            out.append(0.0)
+    return out
+
+
 MONERO_RPC_URL = os.getenv("MONERO_RPC_URL", "http://127.0.0.1:18081/json_rpc")
 MONERO_RPC_TIMEOUT_SEC = max(5.0, min(600.0, float(os.getenv("MONERO_RPC_TIMEOUT_SEC", "60"))))
 MONERO_RPC_STALE_TTL_SEC = max(30.0, min(3600.0, float(os.getenv("MONERO_RPC_STALE_TTL_SEC", "300"))))
@@ -41,6 +56,12 @@ XMRIG_API_URLS = [u.strip() for u in os.getenv("XMRIG_API_URLS", "").split(",") 
 _labels = [x.strip() for x in os.getenv("XMRIG_RIG_LABELS", "").split(",") if x.strip()]
 XMRIG_RIG_LABELS = _labels + [f"rig_{i}" for i in range(len(_labels), len(XMRIG_API_URLS))]
 XMRIG_API_TOKEN = os.getenv("XMRIG_API_TOKEN", "")
+XMRIG_API_TIMEOUT_SEC = max(1.0, min(20.0, float(os.getenv("XMRIG_API_TIMEOUT_SEC", "5"))))
+
+RIG_TELEMETRY_URLS = _csv("RIG_TELEMETRY_URLS", "")
+RIG_TELEMETRY_TOKEN = os.getenv("RIG_TELEMETRY_TOKEN", "")
+RIG_TELEMETRY_TIMEOUT_SEC = max(1.0, min(20.0, float(os.getenv("RIG_TELEMETRY_TIMEOUT_SEC", "3"))))
+RIG_TELEMETRY_STALE_SEC = max(10.0, min(3600.0, float(os.getenv("RIG_TELEMETRY_STALE_SEC", "45"))))
 
 ELECTRICITY_USD_PER_KWH = float(os.getenv("ELECTRICITY_USD_PER_KWH", "0.12"))
 WATTS = [
@@ -48,6 +69,20 @@ WATTS = [
     _f("WATTS_LAPTOP", 0.0) or 0.0,
     _f("WATTS_MAC_MINI", 0.0) or 0.0,
 ]
+
+XMR_USD_SOURCES = _csv("XMR_USD_SOURCES", "coingecko,kraken,cryptocompare")
+XMR_USD_CACHE_TTL_SEC = max(5.0, min(3600.0, float(os.getenv("XMR_USD_CACHE_TTL_SEC", "300"))))
+XMR_USD_SOURCE_TIMEOUT_SEC = max(1.0, min(20.0, float(os.getenv("XMR_USD_SOURCE_TIMEOUT_SEC", "8"))))
+
+SAFETY_ENABLE_AUTOMATION = os.getenv("SAFETY_ENABLE_AUTOMATION", "0") == "1"
+SAFETY_DRY_RUN = os.getenv("SAFETY_DRY_RUN", "1") == "1"
+SAFETY_BREACH_CONSEC_SEC = max(5, _i("SAFETY_BREACH_CONSEC_SEC", 30))
+SAFETY_RECOVERY_CONSEC_SEC = max(5, _i("SAFETY_RECOVERY_CONSEC_SEC", 120))
+SAFETY_ACTION_COOLDOWN_SEC = max(5, _i("SAFETY_ACTION_COOLDOWN_SEC", 120))
+SAFETY_MISSING_TELEMETRY_CONSEC_SEC = max(5, _i("SAFETY_MISSING_TELEMETRY_CONSEC_SEC", 120))
+SAFETY_MAX_CPU_TEMP_C = _csv_float("SAFETY_MAX_CPU_TEMP_C", "")
+SAFETY_MAX_GPU_TEMP_C = _csv_float("SAFETY_MAX_GPU_TEMP_C", "")
+SAFETY_MAX_POWER_W = _csv_float("SAFETY_MAX_POWER_W", "")
 
 MONERO_MAX_SYNC_LAG_BLOCKS = _i("MONERO_MAX_SYNC_LAG_BLOCKS", 2)
 ALERT_TO = os.getenv("ALERT_TO", "")
