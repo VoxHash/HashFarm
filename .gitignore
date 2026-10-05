@@ -3,10 +3,13 @@
 # =============================================================================
 .env
 .env.*
+!.env.example
+!.env.template
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+*.env
 
 # =============================================================================
 # Monero / P2Pool local data (large + sensitive)
@@ -14,6 +17,10 @@
 .bitmonero/
 .bitmonero.bak*/
 .p2pool-data-api/
+**/bitmonero/
+**/p2pool-data-api/
+*.lmdb
+*.lmdb-lock
 
 # =============================================================================
 # Python
@@ -29,16 +36,23 @@ dist/
 .eggs/
 pip-wheel-metadata/
 monitor/.venv/
-monitor/data/
+.venv/
 venv/
 ENV/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
 .coverage
+.coverage.*
+coverage.xml
 htmlcov/
 *.cover
 .hypothesis/
+.tox/
+.nox/
+*.sqlite
+*.sqlite3
+monitor/data/
 
 # =============================================================================
 # Logs and runtime noise
@@ -47,6 +61,7 @@ htmlcov/
 *.log.*
 logs/
 p2pool.log
+nohup.out
 
 # =============================================================================
 # IDE / editors / agent artifacts
@@ -61,13 +76,19 @@ p2pool.log
 *.sublime-project
 *.sublime-workspace
 .devcontainer/
+*.code-workspace
 
 # =============================================================================
 # OS
 # =============================================================================
 .DS_Store
+.AppleDouble
+.LSOverride
 Thumbs.db
+ehthumbs.db
+Desktop.ini
 .Trash-*
+$RECYCLE.BIN/
 
 # =============================================================================
 # Front-end / tooling (future-proof)
@@ -77,9 +98,24 @@ node_modules/
 out/
 .turbo/
 .vercel/
+.cache/
 
 # =============================================================================
 # Keys and local TLS experiments (do not ship)
 # =============================================================================
 *.pem
 !**/example*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+*.wallet
+*.keys
+
+# =============================================================================
+# Local XMRig / CUDA build trees (if cloned beside the repo)
+# =============================================================================
+xmrig-*/
+xmrig-cuda-*/
+**/libxmrig-cuda.so

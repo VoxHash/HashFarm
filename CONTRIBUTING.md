@@ -25,4 +25,4 @@ Use the [pull request template](.github/PULL_REQUEST_TEMPLATE.md). At minimum:
 
 ## Questions
 
-Open a [discussion](https://github.com/VoxHash-Labs/HashFarm/discussions) or an issue (non-security) after checking existing threads.
+Open a [discussion](https://github.com/VoxHash/HashFarm/discussions) (when enabled) or an issue (non-security) after checking existing threads. Contact: [contact@voxhash.dev](mailto:contact@voxhash.dev).

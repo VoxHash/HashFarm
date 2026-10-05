@@ -47,13 +47,14 @@ Python 3.x, **httpx** async client:
 - Polls each URL in `XMRIG_API_URLS` (`/2/summary` or `/1/summary`).
 - Optional CoinGecko spot price and SMTP alerts.
 
-State is held in-process (`state.SNAPSHOT`); there is no relational DB for the live UI.
+Live UI state is held in-process (`state.SNAPSHOT`). Optional **SQLite** stores append-only poll rows for trends (`METRICS_*`); it is not required for the dashboard to render.
 
 ### Metrics and probes
 
 - Each successful (or failed) poll can append a row to **SQLite** (`METRICS_SQLITE_PATH`) for local trend analysis.
 - **`GET /metrics`** exposes the latest snapshot as **Prometheus** text for scrapers.
 - **`GET /health`** is liveness; **`GET /ready`** fails if no recent snapshot (for systemd/Kubernetes-style probes).
+- CI runs `ruff` / `pytest` on `monitor/` and `shellcheck` on `scripts/`.
 
 ## Configuration flow
 
@@ -70,5 +71,5 @@ State is held in-process (`state.SNAPSHOT`); there is no relational DB for the l
 ## Extension points
 
 - New collectors: add a client module and extend `collector.build_snapshot`.
-- Alerts: SMTP path in settings; could add webhook or Pushover later.
-- CI: GitHub Actions can run `ruff`/`pytest` on `monitor/` when tests exist.
+- Alerts: SMTP path in settings; webhook or Pushover are roadmap candidates.
+- CI already gates `monitor/` (`ruff`, `pytest`) and `scripts/` (`shellcheck`).

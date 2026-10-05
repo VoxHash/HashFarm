@@ -11,6 +11,9 @@
 | Topic | Location |
 | ----- | -------- |
 | Doc index | [docs/index.md](docs/index.md) |
+| Quick start | [docs/quick-start.md](docs/quick-start.md) |
+| Configuration | [docs/configuration.md](docs/configuration.md) |
+| Troubleshooting | [docs/troubleshooting.md](docs/troubleshooting.md) |
 | Architecture | [docs/architecture.md](docs/architecture.md) |
 | CUDA (optional) | [docs/cuda-mining.md](docs/cuda-mining.md) |
 | Remote RPC / Tor | [docs/remote-rpc-tor.md](docs/remote-rpc-tor.md) |
@@ -20,7 +23,8 @@
 
 ## GitHub
 
-- **Repository:** [github.com/VoxHash-Labs/HashFarm](https://github.com/VoxHash-Labs/HashFarm)
+- **Organization:** VoxHash Technologies
+- **Repository:** [github.com/VoxHash/HashFarm](https://github.com/VoxHash/HashFarm)
 - **Issues:** use the [bug report](.github/ISSUE_TEMPLATE/bug_report.md) or [feature request](.github/ISSUE_TEMPLATE/feature_request.md) templates when filing a new issue.
 
 ## Contact

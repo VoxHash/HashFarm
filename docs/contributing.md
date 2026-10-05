@@ -31,7 +31,7 @@ Point `.env` at a working local stack or mocks are **not** used in production pa
 
 ## Branch and PR workflow
 
-1. Fork [VoxHash-Labs/HashFarm](https://github.com/VoxHash-Labs/HashFarm) and clone your fork.
+1. Fork [VoxHash/HashFarm](https://github.com/VoxHash/HashFarm) and clone your fork.
 2. Create a branch: `feat/…`, `fix/…`, or `docs/…`.
 3. Commit with [Conventional Commits](https://www.conventionalcommits.org/) messages.
 4. Push and open a PR against `main` using `.github/PULL_REQUEST_TEMPLATE.md`.

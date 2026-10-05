@@ -1,6 +1,6 @@
 # GitHub Wiki outline
 
-Use this outline when enabling the [GitHub Wiki](https://docs.github.com/en/communities/documenting-your-project-with-wikis/about-wikis) for **VoxHash-Labs/HashFarm**. Create pages in any order; keep the sidebar linked to the sections below.
+Use this outline when enabling the [GitHub Wiki](https://docs.github.com/en/communities/documenting-your-project-with-wikis/about-wikis) for **VoxHash/HashFarm**. Create pages in any order; keep the sidebar linked to the sections below.
 
 ## Suggested pages
 
